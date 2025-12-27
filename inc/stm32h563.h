@@ -31,7 +31,7 @@ typedef struct {
     volatile uint32_t BRR;
     volatile uint32_t HSLVR;
     volatile uint32_t SECCFGR;
-} GPIO_TypeDef;
+} GPIO_t;
 
 /* --- RCC Registers --- */
 typedef struct {
@@ -95,7 +95,7 @@ typedef struct {
     uint32_t          RESERVED19;
     volatile uint32_t BDCR;
     volatile uint32_t RSR;
-} RCC_TypeDef;
+} RCC_t;
 
 /* --- USART Registers --- */
 typedef struct {
@@ -111,7 +111,7 @@ typedef struct {
     volatile uint32_t RDR;
     volatile uint32_t TDR;
     volatile uint32_t PRESC;
-} USART_TypeDef;
+} USART_t;
 
 /* --- SysTick Registers --- */
 typedef struct {
@@ -119,13 +119,13 @@ typedef struct {
     volatile uint32_t LOAD;
     volatile uint32_t VAL;
     volatile uint32_t CALIB;
-} SysTick_TypeDef;
+} SysTick_t;
 
 /* --- FDCAN Registers (Added for your Project) --- */
 typedef struct {
     volatile uint32_t CREL;   // Core Release Register
     volatile uint32_t ENDN;   // Endian Register
-    volatile uint32_t CUST;   // Customer Register
+    uint32_t RESERVED0;   
     volatile uint32_t DBTP;   // Data Bit Timing & Prescaler
     volatile uint32_t TEST;   // Test Register
     volatile uint32_t RWD;    // RAM Watchdog
@@ -135,39 +135,39 @@ typedef struct {
     volatile uint32_t TSCV;   // Timestamp Counter Value
     volatile uint32_t TOCC;   // Timeout Counter Configuration
     volatile uint32_t TOCV;   // Timeout Counter Value
+    uint32_t RESERVED1[4];
     volatile uint32_t ECR;    // Error Counter Register
     volatile uint32_t PSR;    // Protocol Status Register
     volatile uint32_t TDCR;   // Transmitter Delay Compensation
+    uint32_t RESERVED2;
     volatile uint32_t IR;     // Interrupt Register
     volatile uint32_t IE;     // Interrupt Enable
     volatile uint32_t ILS;    // Interrupt Line Select
     volatile uint32_t ILE;    // Interrupt Line Enable
-    volatile uint32_t RXGFC;  // Global Filter Configuration
+    uint32_t RESERVED3[8];
+    volatile uint32_t RXGFC;  // Global Filter Configuration <---- SONO ARRIVATO QUI, TUTTO OK
     volatile uint32_t XIDAM;  // Extended ID AND Mask
     volatile uint32_t HPMS;   // High Priority Message Status
-    volatile uint32_t NDAT1;  // New Data 1
-    volatile uint32_t NDAT2;  // New Data 2
-    volatile uint32_t RXF0C;  // Rx FIFO 0 Configuration
+    uint32_t RESERVED4;
     volatile uint32_t RXF0S;  // Rx FIFO 0 Status
     volatile uint32_t RXF0A;  // Rx FIFO 0 Acknowledge
-    volatile uint32_t RXBC;   // Rx Buffer Configuration
-    volatile uint32_t RXF1C;  // Rx FIFO 1 Configuration
     volatile uint32_t RXF1S;  // Rx FIFO 1 Status
     volatile uint32_t RXF1A;  // Rx FIFO 1 Acknowledge
-    volatile uint32_t RXESC;  // Rx Buffer Element Size Config
+    uint32_t RESERVED5[8];
     volatile uint32_t TXBC;   // Tx Buffer Configuration
     volatile uint32_t TXFQS;  // Tx FIFO/Queue Status
-    volatile uint32_t TXESC;  // Tx Buffer Element Size Config
-    volatile uint32_t TXBAR;  // Tx Buffer Add Request
-    volatile uint32_t TXBCR;  // Tx Buffer Cancellation Request
-    volatile uint32_t TXBTO;  // Tx Buffer Transmission Occurred
-    volatile uint32_t TXBCF;  // Tx Buffer Cancellation Finished
-    volatile uint32_t TXBTIE; // Tx Buffer Transmission Interrupt Enable
-    volatile uint32_t TXBCIE; // Tx Buffer Cancellation Finished Interrupt Enable
-    volatile uint32_t TXEFC;  // Tx Event FIFO Configuration
-    volatile uint32_t TXEFS;  // Tx Event FIFO Status
-    volatile uint32_t TXEFA;  // Tx Event FIFO Acknowledge
-} FDCAN_TypeDef;
+    volatile uint32_t TXBRP;
+    volatile uint32_t TXBAR;
+    volatile uint32_t TXBCR;
+    volatile uint32_t TXBTO;
+    volatile uint32_t TXBCF;
+    volatile uint32_t TXBTIE;
+    volatile uint32_t TXBCIE;
+    volatile uint32_t TXEFS;
+    volatile uint32_t TXEFA;
+    uint32_t RESERVED6;
+    volatile uint32_t CKDIV;
+} FDCAN_t;
 
 /* ========================================================================== */
 /* MEMORY MAP                                     */
@@ -182,42 +182,31 @@ typedef struct {
 
 /* RCC */
 #define RCC_BASE            (AHB4_BASE + 0x0C00UL)
-#define RCC                 ((RCC_TypeDef *) RCC_BASE)
+#define RCC                 ((RCC_t *) RCC_BASE)
 
 /* GPIO */
 #define GPIO_BASE           (AHB2_BASE)
 #define GPIO_PORT_OFFSET    0x0400UL
-#define GPIO(bank)          ((GPIO_TypeDef *) (GPIO_BASE + (GPIO_PORT_OFFSET * (bank))))
+#define GPIO(bank)          ((GPIO_t *) (GPIO_BASE + (GPIO_PORT_OFFSET * (bank))))
 
 /* USART */
+#define USART1_BASE         (APB2_BASE + 0x3800UL)
+#define USART2_BASE         (APB1_BASE + 0x4400UL)
 #define USART3_BASE         (APB1_BASE + 0x4800UL) // 0x40004800
-#define USART3              ((USART_TypeDef *) USART3_BASE)
+
+#define USART1              ((USART_t *) USART1_BASE)
+#define USART2              ((USART_t *) USART2_BASE)
+#define USART3              ((USART_t *) USART3_BASE)
 
 /* SysTick */
 #define SYSTICK_BASE        0xE000E010UL
-#define SysTick             ((SysTick_TypeDef *) SYSTICK_BASE)
+#define SysTick             ((SysTick_t *) SYSTICK_BASE)
 
 /* FDCAN */
+#define FDCAN_SRAM_BASE     (0x4000AC00UL)
 #define FDCAN1_BASE         (0x4000A400UL)
-#define FDCAN1              ((FDCAN_TypeDef *) FDCAN1_BASE)
-
-/* ========================================================================== */
-/* FUNCTION PROTOTYPES                              */
-/* ========================================================================== */
-
-// GPIO Modes
-enum { GPIO_MODE_INPUT, GPIO_MODE_OUTPUT, GPIO_MODE_AF, GPIO_MODE_ANALOG };
-
-void gpio_set_mode(uint16_t pin, uint8_t mode);
-void gpio_write(uint16_t pin, bool val);
-void gpio_toggle(uint16_t pin);
-bool gpio_read(uint16_t pin);
-
-void rcc_enable_bank(uint8_t pin);
-void systick_init(uint32_t ticks);
-void usart_init(void);
-
-// Helper for printf (must be implemented by user)
-void _putchar(char c);
+#define FDCAN2_BASE         (0x4000A800UL)
+#define FDCAN1              ((FDCAN_t *) FDCAN1_BASE)
+#define FDCAN2              ((FDCAN_t *) FDCAN2_BASE)
 
 #endif /* STM32H563_H */
