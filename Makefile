@@ -7,13 +7,15 @@ BUILD_DIR = build
 # Source and Header Directories
 SRC_DIR = src
 INC_DIR = inc
+DRIVERS_SRC_DIR = src/drivers
+DRIVERS_INC_DIR = inc/drivers
+
 STARTUP_DIR = startup
 
 # Debug configuration (1=Enable, 0=Disable)
 debug = 1
 
 # FPU Configuration (hard/softfp/soft)
-# [CHANGE] Default to hard float as per H5 requirements
 fpu = hard
 
 ################################################################################
@@ -21,22 +23,26 @@ fpu = hard
 ################################################################################
 CC = arm-none-eabi-gcc
 SZ = arm-none-eabi-size
-# STM32 Programmer CLI (ensure this is in your PATH or provide full path)
+# STM32 Programmer CLI
 STM32PRG = STM32_Programmer_CLI --verbosity 1 -c port=swd mode=HOTPLUG speed=Reliable
 
 ################################################################################
 # SOURCES
 ################################################################################
-# Automatically find all .c files in src/ and .s files in startup/
-C_SOURCES = $(wildcard $(SRC_DIR)/*.c)
+# Recursively find all .c files in src/ and its subdirectories
+C_SOURCES = $(shell find $(SRC_DIR) -name '*.c')
 ASM_SOURCES = $(wildcard $(STARTUP_DIR)/*.s)
 
 # Generate list of object files in the build directory
+# We flatten the structure for objects or keep it. 
+# For simplicity in this makefile, we'll flatten the object paths in build/
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 
-# VPATH tells 'make' where to look for source files matching the pattern rules
-VPATH = $(SRC_DIR):$(STARTUP_DIR)
+# VPATH tells 'make' where to look for source files
+# We need to add all directories containing source files
+SOURCE_DIRS = $(sort $(dir $(C_SOURCES)))
+VPATH = $(SOURCE_DIRS):$(STARTUP_DIR)
 
 ################################################################################
 # COMPILER FLAGS
@@ -63,7 +69,8 @@ MCU_FLAGS = -mcpu=cortex-m33 -mthumb $(FLOATFLAGS)
 # Compiler Flags
 CFLAGS = $(MCU_FLAGS) -std=gnu11 -Wall -fdata-sections -ffunction-sections
 CFLAGS += $(DEBUGFLAGS)
-CFLAGS += -I$(INC_DIR)             # [CHANGE] Add inc/ to include paths
+CFLAGS += -I$(INC_DIR)
+CFLAGS += -I$(DRIVERS_INC_DIR)
 CFLAGS += --specs=nano.specs
 
 # Printf Configuration flags
@@ -74,10 +81,10 @@ ASFLAGS = $(MCU_FLAGS) -x assembler-with-cpp $(DEBUGFLAGS)
 
 # Linker Flags
 LDFLAGS = $(MCU_FLAGS)
-LDFLAGS += -T"linker.ld"           # Linker script
+LDFLAGS += -T"linker.ld"
 LDFLAGS += --specs=nosys.specs 
 LDFLAGS += -Wl,--gc-sections
-LDFLAGS += -Wl,-Map=$(BUILD_DIR)/$(TARGET).map  # [CHANGE] Map file goes to build/
+LDFLAGS += -Wl,-Map=$(BUILD_DIR)/$(TARGET).map
 LDFLAGS += -static --specs=nano.specs
 LDFLAGS += -Wl,--start-group -lc -lm -Wl,--end-group
 
@@ -85,10 +92,8 @@ LDFLAGS += -Wl,--start-group -lc -lm -Wl,--end-group
 # BUILD RULES
 ################################################################################
 
-# Default Target
 all: $(BUILD_DIR)/$(TARGET).elf
 
-# Create the build directory if it doesn't exist
 $(BUILD_DIR):
 	mkdir -p $@
 
@@ -108,20 +113,16 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) linker.ld Makefile | $(BUILD_DIR)
 	@$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	@$(SZ) $@
 
-# Flash the board
 flash: $(BUILD_DIR)/$(TARGET).elf
 	$(STM32PRG) --write $<
 	$(STM32PRG) -hardRst
 
-# Erase the board
 erase:
 	$(STM32PRG) --erase all
 
-# Reset the board
 reset:
 	$(STM32PRG) -hardRst
 
-# Clean up
 clean:
 	rm -rf $(BUILD_DIR)
 
