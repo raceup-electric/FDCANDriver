@@ -6,6 +6,11 @@
 
 #include "stm32h563.h"
 
+typedef enum {
+  FDCAN_RX_FIFO0 = 0,
+  FDCAN_RX_FIFO1 = 1
+} FDCAN_RxFIFO_t;
+
 /**
   * @brief FDCAN Init structure definition
   */
@@ -236,11 +241,11 @@ typedef struct
                                        When the frame is a Non-Filter matching frame, this parameter
                                        is unused.                                                        */
 
-  uint32_t IsFilterMatchingFrame; /*!< Specifies whether the accepted frame did not match any Rx filter.
-                                       Acceptance of non-matching frames may be enabled via
-                                       HAL_FDCAN_ConfigGlobalFilter().
-                                       This parameter takes 0 if the frame matched an Rx filter or
-                                       1 if it did not match any Rx filter                               */
+  // uint32_t IsFilterMatchingFrame; /*!< Specifies whether the accepted frame did not match any Rx filter.
+  //                                      Acceptance of non-matching frames may be enabled via
+  //                                      HAL_FDCAN_ConfigGlobalFilter().
+  //                                      This parameter takes 0 if the frame matched an Rx filter or
+  //                                      1 if it did not match any Rx filter                               */
 
   uint8_t *Data;
 
@@ -249,7 +254,7 @@ typedef struct
 int fdcan_init(FDCAN_Handle_t *fdcan);
 int fdcan_set_filter(FDCAN_Handle_t *fdcan, const FDCAN_Filter_t *filter);
 int fdcan_send(FDCAN_Handle_t *fdcan, const FDCAN_TxElement_t *tx);
-int fdcan_receive(FDCAN_Handle_t *fdcan, FDCAN_RxElement_t *rx);
+int fdcan_receive(FDCAN_Handle_t *fdcan, FDCAN_RxElement_t *rx, FDCAN_RxFIFO_t fifo);
 int fdcan_is_available(FDCAN_Handle_t *fdcan);
 
 #endif

@@ -12,7 +12,7 @@ void SysTick_Handler() {
   timems++;
 }
 
-static USART_TypeDef *DEBUG_UART = USART3;
+static USART_t *DEBUG_UART = USART3;
 
 void _putchar(char c) {
     usart_send_char(DEBUG_UART, c);
