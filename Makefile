@@ -71,6 +71,8 @@ CFLAGS = $(MCU_FLAGS) -std=gnu11 -Wall -fdata-sections -ffunction-sections
 CFLAGS += $(DEBUGFLAGS)
 CFLAGS += -I$(INC_DIR)
 CFLAGS += -I$(DRIVERS_INC_DIR)
+CFLAGS += -Ilib/cmsis_device_h5/Include
+CFLAGS += -Ilib/cmsis_core/Include
 CFLAGS += --specs=nano.specs
 
 # Printf Configuration flags

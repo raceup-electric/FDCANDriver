@@ -14,7 +14,6 @@ void SysTick_Handler() {
 }
 
 static USART_t *DEBUG_UART = USART3;
-FDCAN_Handle_t hfdcan1;
 
 void _putchar(char c) {
     usart_send_char(DEBUG_UART, c);
@@ -33,47 +32,6 @@ void SystemInit(void)
 
     usart_setup(USART3, 115200, 32000000);
 }
-
-void FDCAN_Config(void) {
-    // FDCAN1 Initialization on PA11/PA12
-    hfdcan1.Instance = FDCAN1;
-    
-    // Clock: 40MHz. Target: 500kbps. Total TQ: 80.
-    hfdcan1.Init.NominalPrescaler = 1;
-    hfdcan1.Init.NominalTimeSeg1 = 63; 
-    hfdcan1.Init.NominalTimeSeg2 = 16;
-    hfdcan1.Init.NominalSyncJumpWidth = 4; // SJW
-    
-    // Setup Filters
-    hfdcan1.Init.StdFiltersNbr = 1;
-    hfdcan1.Init.ExtFiltersNbr = 0;
-    
-    // Note: The driver provided sets FDOE and BRSE bits unconditionally.
-    // This config allows FD frames. Since Nominal and Data timings 
-    // are derived from the same Init variables in your driver,
-    // both phases will run at 500kbps.
-    hfdcan1.Init.Loopback = true; // Set to true to test without external transceiver
-    hfdcan1.Init.TxQueue = true;
-
-    if (fdcan_init(&hfdcan1) != 0) {
-        printf("FDCAN Init Failed!\r\n");
-        while(1);
-    }
-
-    // Configure a "Accept All" Filter
-    // Filter Index 0, Type=Range, Config=Store in FIFO0, ID1=0, ID2=0x7FF (All Std IDs)
-    FDCAN_Filter_t filter;
-    filter.FilterIndex = 0;
-    filter.FilterType = 1;   // Classic Filter: Mask
-    filter.FilterConfig = 1; // Store in FIFO0
-    filter.FilterID1 = 0x000; // Value
-    filter.FilterID2 = 0x000; // Mask (0x000 means accept all)
-    
-    fdcan_set_filter(&hfdcan1, &filter);
-    
-    printf("FDCAN Initialized at 500kbps\r\n");
-}
-
 
 int main(void)
 {
@@ -97,26 +55,8 @@ int main(void)
   gpio_write(yellow_led, true);
   gpio_write(red_led, false);
 
-  printf("configuring FDCAN...\r\n");
-  // FDCAN_Config();
 
   uint32_t last_time = timems;
-
-  // Tx Header
-  FDCAN_TxElement_t txHeader;
-  uint8_t txData[8] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
-  
-  txHeader.Identifier = 0x123;
-  txHeader.DataLength = 8; // DLC 8 bytes
-  txHeader.Data = txData;
-  // Note: Your driver 'fdcan_send' ignores ID Type (Std/Ext) configuration 
-  // and assumes Standard ID by shifting << 18. Ensure you use Standard IDs.
-
-  // Rx Header
-  FDCAN_RxElement_t rxHeader;
-  uint8_t rxData[64];
-  rxHeader.Data = rxData;
-
 
   while (1) {
     gpio_write(green_led, gpio_read(button));

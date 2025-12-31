@@ -143,8 +143,8 @@ int fdcan_init(FDCAN_Handle_t *fdcan) {
   if (fdcan->Instance == FDCAN1) {
     // A11 -> RX    A12 -> TX
     rcc_enable_gpio(BANK('A'));
-    gpio_setup(PIN('A', 11), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
-    gpio_setup(PIN('A', 12), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
+    gpio_setup(PIN('D', 0), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
+    gpio_setup(PIN('D', 1), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
   } else if (fdcan->Instance == FDCAN2) {
     // B5 -> RX    B6 -> TX
     rcc_enable_gpio('B');
@@ -161,6 +161,7 @@ int fdcan_init(FDCAN_Handle_t *fdcan) {
   _fdcan_bittiming(fdcan);
 
   if (fdcan->Init.Loopback) {
+    fdcan->Instance->CCCR |= BIT(7);
     fdcan->Instance->TEST |= BIT(4);
   }
   

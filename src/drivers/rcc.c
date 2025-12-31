@@ -19,6 +19,7 @@ void rcc_enable_fdcan() {
 }
 
 void pll1_q_init() {
+  RCC->CR |= BIT(18);
   RCC->CR |= BIT(16);
   while(!(RCC->CR & BIT(17))); // wait for HSE to be ready
   
