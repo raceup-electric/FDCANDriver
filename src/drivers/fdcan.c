@@ -143,13 +143,13 @@ int fdcan_init(FDCAN_Handle_t *fdcan) {
   if (fdcan->Instance == FDCAN1) {
     // A11 -> RX    A12 -> TX
     rcc_enable_gpio(BANK('A'));
-    gpio_setup(PIN('A', 11), GPIO_MODE_AF, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
-    gpio_setup(PIN('A', 12), GPIO_MODE_AF, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
+    gpio_setup(PIN('A', 11), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
+    gpio_setup(PIN('A', 12), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
   } else if (fdcan->Instance == FDCAN2) {
     // B5 -> RX    B6 -> TX
     rcc_enable_gpio('B');
-    gpio_setup(PIN('B', 5), GPIO_MODE_AF, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
-    gpio_setup(PIN('B', 6), GPIO_MODE_AF, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
+    gpio_setup(PIN('B', 5), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
+    gpio_setup(PIN('B', 6), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 9);
   }
 
   fdcan->Instance->CCCR |= BIT(0); // set INIT

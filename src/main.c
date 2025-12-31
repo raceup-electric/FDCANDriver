@@ -25,11 +25,11 @@ void SystemInit(void)
     systick_init(4000);
 
     rcc_enable_usart(USART3);
-    
+
     rcc_enable_gpio(BANK('D'));
     
-    gpio_setup(PIN('D', 8), GPIO_MODE_AF, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_MEDIUM, 7);
-    gpio_setup(PIN('D', 9), GPIO_MODE_AF, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_MEDIUM, 7);
+    gpio_setup(PIN('D', 8), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_MEDIUM, 7);
+    gpio_setup(PIN('D', 9), GPIO_MODE_AF, GPIO_PULLUP, GPIO_OTYPE_PP, GPIO_SPEED_MEDIUM, 7);
 
     usart_setup(USART3, 115200, 32000000);
 }
@@ -92,12 +92,31 @@ int main(void)
   gpio_setup(yellow_led, GPIO_MODE_OUTPUT, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 0);
   gpio_setup(red_led, GPIO_MODE_OUTPUT, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 0);
 
-  gpio_setup(button, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 0);
+  gpio_setup(button, GPIO_MODE_INPUT, GPIO_PULLDOWN, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 0);
 
   gpio_write(yellow_led, true);
   gpio_write(red_led, false);
 
+  printf("configuring FDCAN...\r\n");
+  // FDCAN_Config();
+
   uint32_t last_time = timems;
+
+  // Tx Header
+  FDCAN_TxElement_t txHeader;
+  uint8_t txData[8] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
+  
+  txHeader.Identifier = 0x123;
+  txHeader.DataLength = 8; // DLC 8 bytes
+  txHeader.Data = txData;
+  // Note: Your driver 'fdcan_send' ignores ID Type (Std/Ext) configuration 
+  // and assumes Standard ID by shifting << 18. Ensure you use Standard IDs.
+
+  // Rx Header
+  FDCAN_RxElement_t rxHeader;
+  uint8_t rxData[64];
+  rxHeader.Data = rxData;
+
 
   while (1) {
     gpio_write(green_led, gpio_read(button));
