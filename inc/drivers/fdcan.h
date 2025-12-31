@@ -254,6 +254,7 @@ typedef struct
 int fdcan_init(FDCAN_Handle_t *fdcan);
 int fdcan_set_filter(FDCAN_Handle_t *fdcan, const FDCAN_Filter_t *filter);
 int fdcan_send(FDCAN_Handle_t *fdcan, const FDCAN_TxElement_t *tx);
+int fdcan_rxfifo_level(const FDCAN_Handle_t *fdcan, FDCAN_RxFIFO_t fifo);
 int fdcan_receive(FDCAN_Handle_t *fdcan, FDCAN_RxElement_t *rx, FDCAN_RxFIFO_t fifo);
 int fdcan_is_available(FDCAN_Handle_t *fdcan);
 

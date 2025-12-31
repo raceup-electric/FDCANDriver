@@ -1,20 +1,20 @@
 #include "stm32h563.h"
 #include "printf.h"
-
 #include "drivers/fdcan.h"
 #include "drivers/gpio.h"
 #include "drivers/rcc.h"
 #include "drivers/usart.h"
 #include "drivers/systick.h"
 
+// --- Global Variables ---
 static volatile uint32_t timems = 0;
+static USART_t *DEBUG_UART = USART3;
+FDCAN_Handle_t hfdcan1;
 
+// --- SysTick & Debug ---
 void SysTick_Handler() {
   timems++;
 }
-
-static USART_t *DEBUG_UART = USART3;
-FDCAN_Handle_t hfdcan1;
 
 void _putchar(char c) {
     usart_send_char(DEBUG_UART, c);
@@ -22,16 +22,19 @@ void _putchar(char c) {
 
 void SystemInit(void)
 {
-    systick_init(4000);
-
+    // 1. Setup System Ticks
+    systick_init(4000); // Assuming ~4ms tick or similar based on your existing main
+    
+    // 2. Enable Peripherals
     rcc_enable_usart(USART3);
+    rcc_enable_gpio(BANK('D')); // For UART pins
     
-    rcc_enable_gpio(BANK('D'));
-    
+    // 3. Setup UART Pins (PD8=TX, PD9=RX)
     gpio_setup(PIN('D', 8), GPIO_MODE_AF, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_MEDIUM, 7);
     gpio_setup(PIN('D', 9), GPIO_MODE_AF, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_MEDIUM, 7);
 
-    usart_setup(USART3, 115200, 32000000);
+    // 4. Init UART
+    usart_setup(USART3, 115200, 32000000); // Verify your APB1 clock is actually 32MHz here
 }
 
 void FDCAN_Config(void) {
@@ -74,41 +77,63 @@ void FDCAN_Config(void) {
     printf("FDCAN Initialized at 500kbps\r\n");
 }
 
-
 int main(void)
 {
-  printf("starting...\r\n");
   uint16_t green_led = PIN('B', 0);
-  uint16_t yellow_led = PIN('F', 4);
-  uint16_t red_led = PIN('G', 4);
   uint16_t button = PIN('C', 13);
 
   rcc_enable_gpio(PINBANK(button));
   rcc_enable_gpio(PINBANK(green_led));
-  rcc_enable_gpio(PINBANK(yellow_led));
-  rcc_enable_gpio(PINBANK(red_led));
 
   gpio_setup(green_led, GPIO_MODE_OUTPUT, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 0);
-  gpio_setup(yellow_led, GPIO_MODE_OUTPUT, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 0);
-  gpio_setup(red_led, GPIO_MODE_OUTPUT, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 0);
-
   gpio_setup(button, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_OTYPE_PP, GPIO_SPEED_LOW, 0);
+  
+  printf("helloworld\r\n");
 
-  gpio_write(yellow_led, true);
-  gpio_write(red_led, false);
+  // Initialize FDCAN
+  FDCAN_Config();
 
-  uint32_t last_time = timems;
+  uint32_t last_tx_time = 0;
+  
+  // Tx Header
+  FDCAN_TxElement_t txHeader;
+  uint8_t txData[8] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
+  
+  txHeader.Identifier = 0x123;
+  txHeader.DataLength = 8; // DLC 8 bytes
+  txHeader.Data = txData;
+  // Note: Your driver 'fdcan_send' ignores ID Type (Std/Ext) configuration 
+  // and assumes Standard ID by shifting << 18. Ensure you use Standard IDs.
+
+  // Rx Header
+  FDCAN_RxElement_t rxHeader;
+  uint8_t rxData[64];
+  rxHeader.Data = rxData;
 
   while (1) {
-    gpio_write(green_led, gpio_read(button));
+    // 1. RX Polling
+    // Check FIFO0 Fill Level (RXF0S register)
+    // Bit 0-6: F0FL (Fill Level)
+    if ((fdcan_rxfifo_level(&hfdcan1, FDCAN_RX_FIFO0)) > 0) {
+        fdcan_receive(&hfdcan1, &rxHeader, FDCAN_RX_FIFO0);
+        printf("RX ID: 0x%X, Len: %d, Data[0]: 0x%X\r\n", 
+               rxHeader.Identifier, rxHeader.DataLength, rxHeader.Data[0]);
+        
+        // Toggle LED on receive
+        gpio_toggle(green_led);
+    }
 
-    if ((timems - last_time) > 500) {
-      last_time = timems;
-      gpio_toggle(yellow_led);
-      gpio_toggle(red_led);
-      printf("timems: %d\r\n", timems);
+    // 2. TX Periodic (Every 1000ms)
+    if ((timems - last_tx_time) > 1000) {
+      last_tx_time = timems;
+      
+      txData[0]++; // Change data slightly
+      
+      if (fdcan_send(&hfdcan1, &txHeader) == 0) {
+          printf("TX Sent ID: 0x123\r\n");
+      } else {
+          printf("TX Failed (FIFO Full?)\r\n");
+      }
     }
   }
-
-  return 0;
 }

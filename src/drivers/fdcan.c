@@ -164,7 +164,7 @@ int fdcan_init(FDCAN_Handle_t *fdcan) {
     fdcan->Instance->TEST |= BIT(4);
   }
   
-  fdcan->Instance->CCCR |= (BIT(8) | BIT(9)); // disable FDCAN, use standard CAN 2.0
+  // fdcan->Instance->CCCR |= (BIT(8) | BIT(9)); // disable FDCAN, use standard CAN 2.0
   
   if(fdcan->Init.TxQueue) {
     fdcan->Instance->TXBC |= BIT(24);
@@ -212,6 +212,17 @@ int fdcan_send(FDCAN_Handle_t *fdcan, const FDCAN_TxElement_t *tx) {
   return 0;
 }
 
+int fdcan_rxfifo_level(const FDCAN_Handle_t *fdcan, FDCAN_RxFIFO_t fifo){
+  uint32_t fill_level;
+
+  if (fifo == FDCAN_RX_FIFO0) {
+    fill_level = (fdcan->Instance->RXF0S & 0b1111);
+  } else {
+    fill_level = (fdcan->Instance->RXF1S & 0b1111);
+  }
+
+  return fill_level;
+}
 
 int fdcan_receive(FDCAN_Handle_t *fdcan, FDCAN_RxElement_t *rx, FDCAN_RxFIFO_t fifo) {
   uint32_t *rx_addr, byte_counter, index = 0;
