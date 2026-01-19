@@ -199,25 +199,25 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /* USER CODE BEGIN 1 */
-void FDCAN1_IT0_IRQHandler(void)
-{
-  RU_FDCAN_IRQHandler(FDCAN1);
-}
-
-void FDCAN1_IT1_IRQHandler(void)
-{
-  RU_FDCAN_IRQHandler(FDCAN1);
-}
-
-#ifdef FDCAN2
-void FDCAN2_IT0_IRQHandler(void)
-{
-  RU_FDCAN_IRQHandler(FDCAN2);
-}
-
-void FDCAN2_IT1_IRQHandler(void)
-{
-  RU_FDCAN_IRQHandler(FDCAN2);
-}
-#endif
+// void FDCAN1_IT0_IRQHandler(void)
+// {
+//   RUP_FDCAN_IRQHandler(FDCAN1);
+// }
+//
+// void FDCAN1_IT1_IRQHandler(void)
+// {
+//   RUP_FDCAN_IRQHandler(FDCAN1);
+// }
+//
+// #ifdef FDCAN2
+// void FDCAN2_IT0_IRQHandler(void)
+// {
+//   RUP_FDCAN_IRQHandler(FDCAN2);
+// }
+//
+// void FDCAN2_IT1_IRQHandler(void)
+// {
+//   RUP_FDCAN_IRQHandler(FDCAN2);
+// }
+// #endif
 /* USER CODE END 1 */

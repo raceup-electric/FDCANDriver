@@ -26,16 +26,16 @@ int main(void)
   /* 4. Initialize FDCAN1 using the RaceUp Wrapper
    * - Baudrate: 500kbps @ 20MHz Kernel
    */
-  RU_FDCAN_Init(FDCAN1, FDCAN_NOMINAL_BR_500, FDCAN_REJECT);
+  RUP_FDCAN_Init(FDCAN1, FDCAN_NOMINAL_BR_500, FDCAN_REJECT, RUP_FDCAN_IT_RX_FIFO0);
 
   /* 5. Configure Reception Filter (Accept ID 0x123) */
-  RU_FDCAN_AddFilter(FDCAN1, FDCAN_FILTER_DUAL, FDCAN_FILTER_TO_RXFIFO0, 0x123, 0x124);
-  // RU_FDCAN_AddFilter(FDCAN1, FDCAN_FILTER_RANGE, FDCAN_FILTER_TO_RXFIFO1, 0x126, 0x12A);
+  RUP_FDCAN_AddFilter(FDCAN1, FDCAN_FILTER_DUAL, FDCAN_FILTER_TO_RXFIFO0, 0x123, 0x124);
+  // RUP_FDCAN_AddFilter(FDCAN1, FDCAN_FILTER_RANGE, FDCAN_FILTER_TO_RXFIFO1, 0x126, 0x12A);
 
   /* 6. Register User Callback */
-  RU_FDCAN_RegisterRxFIFO0Callback(FDCAN1, My_CAN_Rx_Callback);
+  RUP_FDCAN_RegisterRxFIFO0Callback(FDCAN1, My_CAN_Rx_Callback);
 
-  RU_FDCAN_Start(FDCAN1);
+  RUP_FDCAN_Start(FDCAN1);
 
   /* Data to send */
   uint8_t txData[8] = {0xAA, 0xBB, 0xCC, 0xDD, 0x11, 0x22, 0x33, 0x44};
@@ -45,7 +45,7 @@ int main(void)
   {
     /* --- TRANSMIT --- */
     /* Send a message with ID 0x123 (Matches our own filter for loopback test) */
-    RU_FDCAN_Send(FDCAN1, 0x123, txData, 8);
+    RUP_FDCAN_Send(FDCAN1, 0x123, txData, 8);
 
     /* FLASH ON TX: Toggle LED to indicate transmission */
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);

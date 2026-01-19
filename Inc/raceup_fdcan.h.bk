@@ -1,0 +1,116 @@
+
+#ifndef _RACEUP_FDCAN_H
+#define _RACEUP_FDCAN_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "stm32h5xx_hal.h"
+
+typedef struct {
+    FDCAN_HandleTypeDef hfdcan;
+
+    void (*RxFIFO0Callback)(uint16_t id, uint8_t* data, uint8_t len);
+    void (*RxFIFO1Callback)(uint16_t id, uint8_t* data, uint8_t len);
+    void (*ErrorCallback)(uint32_t error_flags);
+    void (*HpCallback)(FDCAN_HpMsgStatusTypeDef* hpStatus);
+
+    volatile uint8_t Initialized;
+
+} RUP_FDCAN_HandleTypeDef;
+
+typedef enum {
+    RUP_FDCAN_OK       = 0x00U,
+    RUP_FDCAN_ERROR    = 0x01U,
+    RUP_FDCAN_BUSY     = 0x02U,
+    RUP_FDCAN_TIMEOUT  = 0x03U
+} RUP_FDCAN_StatusTypeDef;
+
+typedef enum {
+  FDCAN_NOMINAL_BR_125,
+  FDCAN_NOMINAL_BR_250,
+  FDCAN_NOMINAL_BR_500,
+  FDCAN_NOMINAL_BR_1000
+} RUP_FDCAN_NominalBitrate;
+
+typedef enum {
+    RUP_FDCAN_RX_FIFO0 = FDCAN_RX_FIFO0,
+    RUP_FDCAN_RX_FIFO1 = FDCAN_RX_FIFO1
+} RUP_FDCAN_RxFifoTypeDef;
+
+typedef enum {
+    RUP_FDCAN_ACCEPT_IN_RX_FIFO0 = FDCAN_ACCEPT_IN_RX_FIFO0,
+    RUP_FDCAN_ACCEPT_IN_RX_FIFO1 = FDCAN_ACCEPT_IN_RX_FIFO1,
+    RUP_FDCAN_REJECT             = FDCAN_REJECT,
+} RUP_FDCAN_GlobalFilterTypeDef;
+
+typedef enum {
+    RUP_FDCAN_FILTER_RANGE = FDCAN_FILTER_RANGE,
+    RUP_FDCAN_FILTER_DUAL  = FDCAN_FILTER_DUAL,
+    RUP_FDCAN_FILTER_MASK  = FDCAN_FILTER_MASK
+} RUP_FDCAN_FilterTypeTypeDef;
+
+typedef enum {
+    RUP_FDCAN_FILTER_TO_RXFIFO0    = FDCAN_FILTER_TO_RXFIFO0,
+    RUP_FDCAN_FILTER_TO_RXFIFO1    = FDCAN_FILTER_TO_RXFIFO1,
+    RUP_FDCAN_FILTER_REJECT        = FDCAN_FILTER_REJECT,
+    RUP_FDCAN_FILTER_RXFIFO0_HP    = FDCAN_FILTER_TO_RXFIFO0_HP,
+    RUP_FDCAN_FILTER_RXFIFO1_HP    = FDCAN_FILTER_TO_RXFIFO1_HP
+} RUP_FDCAN_FilterConfigTypeDef;
+
+typedef enum {
+    RUP_FDCAN_IT_NONE      = 0x00U,
+    RUP_FDCAN_IT_RX_FIFO0  = 0x01U,
+    RUP_FDCAN_IT_RX_FIFO1  = 0x02U,
+    RUP_FDCAN_IT_ALL       = 0x03U
+} RUP_FDCAN_RxItModeTypeDef;
+
+extern RUP_FDCAN_HandleTypeDef hRUCAN1;
+
+#ifdef FDCAN2
+extern RUP_FDCAN_HandleTypeDef hRUCAN2;
+#endif
+
+RUP_FDCAN_StatusTypeDef RUP_FDCAN_Init(FDCAN_GlobalTypeDef *Instance, 
+                                       RUP_FDCAN_NominalBitrate br, 
+                                       RUP_FDCAN_GlobalFilterTypeDef global_filter,
+                                       RUP_FDCAN_RxItModeTypeDef rx_it_mode);
+
+RUP_FDCAN_StatusTypeDef RUP_FDCAN_Start(FDCAN_GlobalTypeDef *Instance);
+
+RUP_FDCAN_StatusTypeDef RUP_FDCAN_AddFilter(FDCAN_GlobalTypeDef *Instance,
+    RUP_FDCAN_FilterTypeTypeDef type,
+    RUP_FDCAN_FilterConfigTypeDef config,
+    uint16_t id1,
+    uint16_t id2);
+
+RUP_FDCAN_StatusTypeDef RUP_FDCAN_PollRxMessage(FDCAN_GlobalTypeDef *Instance,
+    RUP_FDCAN_RxFifoTypeDef RxFifo,
+    uint32_t Timeout);
+
+RUP_FDCAN_StatusTypeDef RUP_FDCAN_ReadRxMessage(FDCAN_GlobalTypeDef *Instance,
+    RUP_FDCAN_RxFifoTypeDef RxFifo);
+
+void RUP_FDCAN_RegisterRxFIFO0Callback(FDCAN_GlobalTypeDef *Instance,
+    void (*Callback)(uint16_t id, uint8_t* data, uint8_t len));
+
+void RUP_FDCAN_RegisterRxFIFO1Callback(FDCAN_GlobalTypeDef *Instance,
+    void (*Callback)(uint16_t id, uint8_t* data, uint8_t len));
+
+void RUP_FDCAN_RegisterErrorCallback(FDCAN_GlobalTypeDef *Instance,
+    void (*Callback)(uint32_t error_flags));
+
+void RUP_FDCAN_RegisterHpCallback(FDCAN_GlobalTypeDef *Instance,
+    void (*Callback)(FDCAN_HpMsgStatusTypeDef* hpStatus));
+
+RUP_FDCAN_StatusTypeDef RUP_FDCAN_Send(FDCAN_GlobalTypeDef *Instance,
+    uint16_t id,
+    uint8_t* data,
+    uint8_t len);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
