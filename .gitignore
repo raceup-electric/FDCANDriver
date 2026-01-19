@@ -1,4 +1,5 @@
 Build/
+Docs/
 *.elf
 *.map
 *.o
