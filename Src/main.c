@@ -6,10 +6,19 @@
 #include "main.h"
 #include "raceup_fdcan.h"
 
+uint8_t FIFO0_FLAG = 0, FIFO1_FLAG = 0;
+
 /* --- Private Function Prototypes --- */
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-void My_CAN_Rx_Callback(uint16_t id, uint8_t* data, uint8_t len);
+void fifo0_callback(uint16_t id, uint8_t* data, uint8_t len);
+void fifo1_callback(uint16_t id, uint8_t* data, uint8_t len);
+
+void GPIO_flash(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint32_t Delay) {
+  HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
+  HAL_Delay(Delay);
+  HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
+}
 
 /* --- Main Application --- */
 int main(void)
@@ -30,10 +39,11 @@ int main(void)
 
   /* 5. Configure Reception Filter (Accept ID 0x123) */
   RUP_FDCAN_AddFilter(FDCAN1, FDCAN_FILTER_DUAL, FDCAN_FILTER_TO_RXFIFO0, 0x123, 0x124);
-  // RUP_FDCAN_AddFilter(FDCAN1, FDCAN_FILTER_RANGE, FDCAN_FILTER_TO_RXFIFO1, 0x126, 0x12A);
+  RUP_FDCAN_AddFilter(FDCAN1, FDCAN_FILTER_RANGE, FDCAN_FILTER_TO_RXFIFO1, 0x126, 0x12A);
 
   /* 6. Register User Callback */
-  RUP_FDCAN_RegisterRxFIFO0Callback(FDCAN1, My_CAN_Rx_Callback);
+  RUP_FDCAN_RegisterRxFIFO0Callback(FDCAN1, fifo0_callback);
+  RUP_FDCAN_RegisterRxFIFO1Callback(FDCAN1, fifo1_callback);
 
   RUP_FDCAN_Start(FDCAN1);
 
@@ -47,10 +57,20 @@ int main(void)
     /* Send a message with ID 0x123 (Matches our own filter for loopback test) */
     RUP_FDCAN_Send(FDCAN1, 0x123, txData, 8);
 
+    RUP_FDCAN_ReadRxMessage(FDCAN1, RUP_FDCAN_RX_FIFO1);
+
+    if (FIFO0_FLAG) {
+      GPIO_flash(GPIOG, GPIO_PIN_4, 100);
+      FIFO0_FLAG = 0;
+    }
+
+    if (FIFO1_FLAG) {
+      GPIO_flash(GPIOF, GPIO_PIN_4, 100);
+      FIFO1_FLAG = 0;
+    }
+
     /* FLASH ON TX: Toggle LED to indicate transmission */
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-    HAL_Delay(200);
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+    GPIO_flash(GPIOB, GPIO_PIN_0, 100);
     HAL_Delay(800);
   }
 }
@@ -58,29 +78,33 @@ int main(void)
 /* --- User Callbacks --- */
 
 /**
- * @brief  Called by the wrapper when a valid message is received.
+ * @brief  Called by the wrapper when a valid message is received on FIFO0.
  */
-void My_CAN_Rx_Callback(uint16_t id, uint8_t* data, uint8_t len)
+void fifo0_callback(uint16_t id, uint8_t* data, uint8_t len)
 {
-  /* Check if it is the expected ID */
-  // if (id == 0x123)
-  // {
-      /* FLASH ON RX: Toggle LED to indicate reception */
-      HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_4);
-  // }
+  FIFO0_FLAG = 1;
+}
+
+/**
+ * @brief  Called by the wrapper when a valid message is received on FIFO1.
+ */
+void fifo1_callback(uint16_t id, uint8_t* data, uint8_t len)
+{
+  FIFO1_FLAG = 1;
 }
 
 /* --- Hardware Configuration --- */
 
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct_B0 = {0};
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
 
   /* Configure GPIO pin : PB0 (User LED) */
+  GPIO_InitTypeDef GPIO_InitStruct_B0 = {0};
   GPIO_InitStruct_B0.Pin = GPIO_PIN_0;
   GPIO_InitStruct_B0.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct_B0.Pull = GPIO_NOPULL;
@@ -93,6 +117,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct_G4.Pull = GPIO_NOPULL;
   GPIO_InitStruct_G4.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct_G4);
+
+  GPIO_InitTypeDef GPIO_InitStruct_F4 = {0};
+  GPIO_InitStruct_F4.Pin= GPIO_PIN_4;
+  GPIO_InitStruct_F4.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct_F4.Pull = GPIO_NOPULL;
+  GPIO_InitStruct_F4.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct_F4);
+
 }
 
 void SystemClock_Config(void)
