@@ -319,7 +319,9 @@ RUP_FDCAN_StatusTypeDef RUP_FDCAN_AddFilter(FDCAN_GlobalTypeDef *Instance, RUP_F
 
     FDCAN_FilterTypeDef sFilterConfig;
     static uint32_t filterIdx1 = 0; // Filter bank index for CAN1
+#ifdef FDCAN2
     static uint32_t filterIdx2 = 0; // Filter bank index for CAN2
+#endif //FDCAN2
 
     sFilterConfig.IdType = FDCAN_STANDARD_ID;
     sFilterConfig.FilterType = type;
@@ -456,12 +458,19 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* hfdcan) {
         // 1. Configure Kernel Clock (PLL2Q)
         PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
         PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2Q;
-        PeriphClkInitStruct.PLL2.PLL2Source = RCC_PLL2_SOURCE_HSE; 
-        PeriphClkInitStruct.PLL2.PLL2M = 1;
-        PeriphClkInitStruct.PLL2.PLL2N = 50;
+        // PeriphClkInitStruct.PLL2.PLL2Source = RCC_PLL2_SOURCE_HSE; 
+        // PeriphClkInitStruct.PLL2.PLL2M = 1;
+        // PeriphClkInitStruct.PLL2.PLL2N = 50;
+        // PeriphClkInitStruct.PLL2.PLL2P = 2;
+        // PeriphClkInitStruct.PLL2.PLL2Q = 20; // Critical Value
+        // PeriphClkInitStruct.PLL2.PLL2R = 2;
+        PeriphClkInitStruct.PLL2.PLL2Source = RCC_PLL2_SOURCE_HSI; 
+        PeriphClkInitStruct.PLL2.PLL2M = 4;
+        PeriphClkInitStruct.PLL2.PLL2N = 10;
         PeriphClkInitStruct.PLL2.PLL2P = 2;
-        PeriphClkInitStruct.PLL2.PLL2Q = 20; // Critical Value
+        PeriphClkInitStruct.PLL2.PLL2Q = 8; // Critical Value
         PeriphClkInitStruct.PLL2.PLL2R = 2;
+
         PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2_VCIRANGE_3;
         PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2_VCORANGE_MEDIUM;
         PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
@@ -473,15 +482,16 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* hfdcan) {
         
         // 2. Enable Peripheral and GPIO Clocks
         __HAL_RCC_FDCAN_CLK_ENABLE();
-        __HAL_RCC_GPIOD_CLK_ENABLE();
+        // __HAL_RCC_GPIOD_CLK_ENABLE();
+        __HAL_RCC_GPIOA_CLK_ENABLE();
         
         // 3. Configure GPIOs (PD0 = Rx, PD1 = Tx)
-        GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1;
+        GPIO_InitStruct.Pin = GPIO_PIN_11 | GPIO_PIN_12;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
         GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
-        HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
         // 4. Configure Interrupt Priorities
         HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, 5, 0); // Rx Interrupts
@@ -492,7 +502,6 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* hfdcan) {
     }
 #ifdef FDCAN2
     else if(hfdcan->Instance == FDCAN2) {
-        __HAL_RCC_FDCAN_CLK_ENABLE();
         __HAL_RCC_GPIOB_CLK_ENABLE();
 
         // PB12 = Rx, PB13 = Tx
