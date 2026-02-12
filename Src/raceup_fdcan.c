@@ -116,7 +116,7 @@ static uint8_t Get_Len_From_DLC(uint32_t dlc) {
 /* Public Function Implementation --------------------------------------------*/
 
 RUP_FDCAN_StatusTypeDef RUP_FDCAN_Init(FDCAN_GlobalTypeDef *Instance, 
-                                       RUP_FDCAN_NominalBitrate br, 
+                                       RUP_FDCAN_BitTimingTypeDef bt, 
                                        RUP_FDCAN_GlobalFilterTypeDef global_filter,
                                        RUP_FDCAN_RxItModeTypeDef rx_it_mode) {
   RUP_FDCAN_HandleTypeDef *hWrapper = GetHandle(Instance);
@@ -131,33 +131,17 @@ RUP_FDCAN_StatusTypeDef RUP_FDCAN_Init(FDCAN_GlobalTypeDef *Instance,
   hWrapper->hfdcan.Init.TransmitPause = DISABLE;
   hWrapper->hfdcan.Init.ProtocolException = DISABLE;
 
-  // 2. Configure Bit Timing
-  // These values depend strictly on the PLL2Q clock set in HAL_FDCAN_MspInit.
-  // See raceup_fdcan.h documentation for the Timing Table.
-  uint32_t presc, ts1, ts2, sjw;
-  switch (br) {
-    case FDCAN_NOMINAL_BR_125:
-      presc = 10; ts1 = 13; ts2 = 2; sjw = 1; break;
-    case FDCAN_NOMINAL_BR_250:
-      presc = 5;  ts1 = 13; ts2 = 2; sjw = 1; break;
-    case FDCAN_NOMINAL_BR_1000:
-      presc = 2;  ts1 = 8;  ts2 = 1; sjw = 1; break;
-    case FDCAN_NOMINAL_BR_500:
-    default:
-      presc = 4;  ts1 = 8;  ts2 = 1; sjw = 1; break;
-  }
-  
   // Apply nominal timings (Arbitration Phase)
-  hWrapper->hfdcan.Init.NominalPrescaler = presc;
-  hWrapper->hfdcan.Init.NominalSyncJumpWidth = sjw;
-  hWrapper->hfdcan.Init.NominalTimeSeg1 = ts1;
-  hWrapper->hfdcan.Init.NominalTimeSeg2 = ts2;
+  hWrapper->hfdcan.Init.NominalPrescaler = bt.presc;
+  hWrapper->hfdcan.Init.NominalSyncJumpWidth = bt.sjw;
+  hWrapper->hfdcan.Init.NominalTimeSeg1 = bt.ts1;
+  hWrapper->hfdcan.Init.NominalTimeSeg2 = bt.ts2;
 
   // Apply data timings (Data Phase - used in FD mode, mirrored here for consistency)
-  hWrapper->hfdcan.Init.DataPrescaler = presc;
-  hWrapper->hfdcan.Init.DataSyncJumpWidth = sjw;
-  hWrapper->hfdcan.Init.DataTimeSeg1 = ts1;
-  hWrapper->hfdcan.Init.DataTimeSeg2 = ts2;
+  hWrapper->hfdcan.Init.DataPrescaler = bt.presc;
+  hWrapper->hfdcan.Init.DataSyncJumpWidth = bt.sjw;
+  hWrapper->hfdcan.Init.DataTimeSeg1 = bt.ts1;
+  hWrapper->hfdcan.Init.DataTimeSeg2 = bt.ts2;
 
   // 3. Configure Message RAM Limits
   hWrapper->hfdcan.Init.StdFiltersNbr = 28; // Max standard filters

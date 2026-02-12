@@ -83,17 +83,24 @@ typedef enum {
     RUP_FDCAN_TIMEOUT  = 0x03U  /*!< Operation timed out */
 } RUP_FDCAN_StatusTypeDef;
 
-/**
- * @brief  Supported Nominal Bitrates.
- * @note   These bitrates are configured with specific hardcoded TQ values in the Init function.
- * See @ref fdcan_usage for the exact prescaler and time segment values.
- */
-typedef enum {
-  FDCAN_NOMINAL_BR_125,  /*!< 125 kBit/s (Presc: 10, Total TQ: 16) */
-  FDCAN_NOMINAL_BR_250,  /*!< 250 kBit/s (Presc: 5,  Total TQ: 16) */
-  FDCAN_NOMINAL_BR_500,  /*!< 500 kBit/s (Presc: 4,  Total TQ: 10) */
-  FDCAN_NOMINAL_BR_1000  /*!< 1 Mbit/s   (Presc: 2,  Total TQ: 10) */
-} RUP_FDCAN_NominalBitrate;
+// /**
+//  * @brief  Supported Nominal Bitrates.
+//  * @note   These bitrates are configured with specific hardcoded TQ values in the Init function.
+//  * See @ref fdcan_usage for the exact prescaler and time segment values.
+//  */
+// typedef enum {
+//   FDCAN_NOMINAL_BR_125,  /*!< 125 kBit/s (Presc: 10, Total TQ: 16) */
+//   FDCAN_NOMINAL_BR_250,  /*!< 250 kBit/s (Presc: 5,  Total TQ: 16) */
+//   FDCAN_NOMINAL_BR_500,  /*!< 500 kBit/s (Presc: 4,  Total TQ: 10) */
+//   FDCAN_NOMINAL_BR_1000  /*!< 1 Mbit/s   (Presc: 2,  Total TQ: 10) */
+// } RUP_FDCAN_NominalBitrate;
+
+typedef struct {
+  uint32_t presc;
+  uint32_t ts1;
+  uint32_t ts2;
+  uint32_t sjw;
+} RUP_FDCAN_BitTimingTypeDef
 
 /**
  * @brief  Rx FIFO Selection.
