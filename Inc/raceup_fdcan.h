@@ -100,7 +100,7 @@ typedef struct {
   uint32_t ts1;
   uint32_t ts2;
   uint32_t sjw;
-} RUP_FDCAN_BitTimingTypeDef
+} RUP_FDCAN_BitTimingTypeDef;
 
 /**
  * @brief  Rx FIFO Selection.
