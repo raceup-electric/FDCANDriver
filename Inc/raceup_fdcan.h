@@ -181,7 +181,7 @@ extern RUP_FDCAN_HandleTypeDef hRUCAN2;
  * * @warning This function resets the peripheral. Any existing configuration is lost.
  */
 RUP_FDCAN_StatusTypeDef RUP_FDCAN_Init(FDCAN_GlobalTypeDef *Instance, 
-                                       RUP_FDCAN_NominalBitrate br, 
+                                       RUP_FDCAN_BitTimingTypeDef br, 
                                        RUP_FDCAN_GlobalFilterTypeDef global_filter,
                                        RUP_FDCAN_RxItModeTypeDef rx_it_mode);
 
